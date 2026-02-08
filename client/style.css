@@ -8,7 +8,7 @@
 /* Основные стили страницы */
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #000000, #0059ff, #0059ff);
+    background: linear-gradient(135deg, #000000 0%, #001a3d 50%, #000d1a 100%);
     color: white;
     height: 100vh;
     height: 100dvh;
