@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Карточная игра "Дурак" - Сетевой мультиплеер</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -132,8 +132,10 @@
         </div>
     </div>
 
-    <!-- Подключаем Socket.io клиентскую библиотеку -->
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Подключаем Socket.io клиентскую библиотеку с CDN, чтобы избежать 404 на /socket.io/socket.io.js -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"
+            integrity="sha384-L+TsQWbiwtW9DWeIPU6f8SU9u98FvugYvtIm59dFLE3UwYLVhgr39W9vZHur8X8c"
+            crossorigin="anonymous"></script>
     <!-- Подключаем основной игровой скрипт -->
     <script src="game.js"></script>
 </body>
