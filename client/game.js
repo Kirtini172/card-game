@@ -497,8 +497,11 @@ class CardGameClient {
     const player = this.gameState.players.find(p => p.id === this.playerId);
     const isMyTurn = this.gameState.currentPlayer === this.playerId;
     
-    // Кнопка "Взять карты" показывается только защищающемуся в его ход
-    if (isMyTurn && player && player.isDefender) {
+    // Кнопка "Взять карты"
+    // Показываем её защищающемуся, если на столе есть карты
+    // (даже если сервер потом отклонит невозможный момент, игрок всегда видит кнопку)
+    const hasCardsOnTable = this.gameState.table && this.gameState.table.length > 0;
+    if (player && player.isDefender && hasCardsOnTable) {
       takeCardsBtn.classList.remove('hidden');
     } else {
       takeCardsBtn.classList.add('hidden');
