@@ -8,7 +8,8 @@
 /* Основные стили страницы */
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #000000, #0059ff, #0059ff);
+    /* Одинаковый тёмно‑синий цвет сверху и снизу */
+    background: linear-gradient(180deg, #020617 0%, #020617 100%);
     color: white;
     min-height: 100vh;
     min-height: 100dvh;
