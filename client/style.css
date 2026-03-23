@@ -25,7 +25,7 @@ body {
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     background: rgba(0, 0, 0, 0.5);
-    color: #ffeb3b;
+    color: #ffffff;
     font-size: 0.9rem;
 }
 
@@ -781,4 +781,132 @@ body {
     input, select, textarea, button {
         font-size: 16px !important;
     }
+}
+
+/* ===== KARTI design overrides (lobby + game) ===== */
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-card: #0f3460;
+    --bg-felt: #1a3a1a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0b0;
+    --accent: #e94560;
+    --accent-hover: #ff6b6b;
+    --btn-primary: #e94560;
+    --btn-primary-hover: #ff6b6b;
+    --btn-secondary: #445566;
+    --btn-secondary-hover: #556677;
+    --border: #2a2a4a;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(circle at top, #203a67 0%, var(--bg-primary) 55%, #121220 100%);
+    color: var(--text-primary);
+}
+
+#loginScreen {
+    background: transparent;
+    padding: 16px;
+}
+
+.login-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.login-container h1 {
+    color: var(--text-primary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.subtitle,
+.hint,
+.instructions li {
+    color: var(--text-secondary);
+}
+
+.lobby-tabs {
+    background: #111a30;
+    border: 1px solid var(--border);
+}
+
+.lobby-tab.active {
+    background: rgba(233, 69, 96, 0.2);
+    color: #fff;
+}
+
+#playerNameCreate,
+#playerNameJoin,
+#lobbyCodeInput {
+    background: #0f1a33;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background: var(--btn-primary);
+}
+
+.btn-primary:hover {
+    background: var(--btn-primary-hover);
+}
+
+.btn-secondary {
+    border-color: var(--btn-secondary);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--btn-secondary);
+}
+
+#gameScreen {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+#gameInfo,
+.player-area,
+#tableArea,
+.message,
+.lobby-code-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+#tableArea {
+    background: linear-gradient(180deg, #1f4b2f 0%, var(--bg-felt) 100%);
+}
+
+.player-area h3,
+#tableArea h3,
+.instructions h3,
+.lobby-code-box .lobby-code {
+    color: #fff;
+}
+
+.card {
+    border: 1px solid #c9c9d8;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.card.selected {
+    border-color: #ffd166;
+    box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.7);
+}
+
+#gameMessages {
+    background: var(--bg-secondary);
+    border-color: var(--accent);
+}
+
+.hint-message {
+    background: rgba(233, 69, 96, 0.95);
+    color: #fff;
 }
