@@ -20,28 +20,74 @@
             <div class="login-container">
                 <h1>🎮 Карточная игра "Дурак"</h1>
                 <p class="subtitle">Сетевой мультиплеер для двух игроков</p>
-                
-                <!-- Выбор: создать или войти в лобби -->
-                <div id="lobbyChoice">
+
+                <!-- АВТОРИЗАЦИЯ: показывается до входа -->
+                <div id="authBlock">
+                    <div class="lobby-tabs">
+                        <button type="button" id="tabLogin" class="lobby-tab active">Вход</button>
+                        <button type="button" id="tabRegister" class="lobby-tab">Регистрация</button>
+                    </div>
+
+                    <div id="loginForm" class="lobby-block">
+                        <div class="form-group">
+                            <input type="text" id="loginUsername" placeholder="Логин" maxlength="20" autocomplete="username">
+                            <input type="password" id="loginPassword" placeholder="Пароль" maxlength="50" autocomplete="current-password">
+                            <button id="loginBtn" class="btn-primary">Войти</button>
+                        </div>
+                    </div>
+
+                    <div id="registerForm" class="lobby-block hidden">
+                        <div class="form-group">
+                            <input type="text" id="registerUsername" placeholder="Логин (3–20 символов)" maxlength="20" autocomplete="username">
+                            <input type="password" id="registerPassword" placeholder="Пароль (минимум 4 символа)" maxlength="50" autocomplete="new-password">
+                            <button id="registerBtn" class="btn-primary">Создать аккаунт</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Выбор: создать или войти в лобби (показывается после авторизации) -->
+                <div id="lobbyChoice" class="hidden">
+                    <div class="account-bar">
+                        <span>Вы вошли как: <span id="currentUsername" class="username-chip"></span></span>
+                        <button id="logoutBtn" type="button" class="link-btn">Выйти</button>
+                    </div>
+
+                    <!-- Если есть сохранённая игра — показываем кнопку "Продолжить" -->
+                    <div id="resumePanel" class="resume-panel hidden">
+                        <p>У вас есть незаконченная игра: <span id="resumeCode" class="lobby-code-inline"></span></p>
+                        <div class="resume-actions">
+                            <button id="resumeBtn" class="btn-primary">Продолжить игру</button>
+                            <button id="abandonBtn" class="btn-secondary">Удалить сохранение</button>
+                        </div>
+                    </div>
+
                     <div class="lobby-tabs">
                         <button type="button" id="tabCreate" class="lobby-tab active">Создать лобби</button>
                         <button type="button" id="tabJoin" class="lobby-tab">Войти по коду</button>
+                        <button type="button" id="tabBot" class="lobby-tab">Против бота</button>
                     </div>
-                    
+
                     <!-- Блок "Создать лобби" -->
                     <div id="createLobbyBlock" class="lobby-block">
                         <div class="form-group">
-                            <input type="text" id="playerNameCreate" placeholder="Ваше имя" maxlength="15">
+                            <p class="hint">Имя в игре = ваш логин</p>
                             <button id="createLobbyBtn" class="btn-primary">Создать лобби</button>
                         </div>
                     </div>
-                    
+
                     <!-- Блок "Войти по коду" -->
                     <div id="joinLobbyBlock" class="lobby-block hidden">
                         <div class="form-group">
-                            <input type="text" id="playerNameJoin" placeholder="Ваше имя" maxlength="15">
                             <input type="text" id="lobbyCodeInput" placeholder="Код лобби (6 символов)" maxlength="6" autocomplete="off">
                             <button id="joinLobbyBtn" class="btn-primary">Войти в лобби</button>
+                        </div>
+                    </div>
+
+                    <!-- Блок "Против бота" — одиночная игра -->
+                    <div id="botLobbyBlock" class="lobby-block hidden">
+                        <div class="form-group">
+                            <p class="hint">Игра против бота</p>
+                            <button id="createBotLobbyBtn" class="btn-primary">Начать игру</button>
                         </div>
                     </div>
                 </div>

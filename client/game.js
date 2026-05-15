@@ -2,15 +2,21 @@
  * Класс CardGameClient - управляет клиентской частью игры
  * Отвечает за отображение интерфейса и взаимодействие с сервером
  */
+const SESSION_TOKEN_KEY = 'durak_session_token';
+
 class CardGameClient {
   constructor() {
     // Подключаемся к серверу Socket.io
     this.socket = io();
-    
-    // ID текущего игрока (устанавливается сервером)
+
+    // ID текущего игрока (теперь это username)
     this.playerId = null;
-    // Имя текущего игрока
+    // Имя текущего игрока (равно username после авторизации)
     this.playerName = '';
+    // Авторизованы ли мы
+    this.authenticated = false;
+    // Информация об активной сохранённой игре (если есть)
+    this.activeGame = null;
     // Текущее состояние игры
     this.gameState = null;
     // Индекс выбранной карты в руке
@@ -26,12 +32,16 @@ class CardGameClient {
       defend: this.createAudio('sounds/defend.mp3'),
       draw: this.createAudio('sounds/draw.mp3')
     };
-    
+
     console.log('Клиент игры инициализирован');
-    
+
     // Инициализируем обработчики событий
     this.initEventListeners();
     this.setupSocketListeners();
+
+    // На каждое подключение (в т.ч. авто-реконнект) пробуем восстановить
+    // сессию по сохранённому токену.
+    this.socket.on('connect', () => this.tryRestoreSession());
   }
 
   /**
@@ -77,7 +87,53 @@ class CardGameClient {
       });
     }
 
-    // Вкладки: создать / войти в лобби
+    // Авторизация
+    document.getElementById('tabLogin').addEventListener('click', () => {
+      this.playSound('click');
+      this.showAuthTab('login');
+    });
+    document.getElementById('tabRegister').addEventListener('click', () => {
+      this.playSound('click');
+      this.showAuthTab('register');
+    });
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      this.playSound('click');
+      this.doLogin();
+    });
+    document.getElementById('registerBtn').addEventListener('click', () => {
+      this.playSound('click');
+      this.doRegister();
+    });
+    document.getElementById('loginUsername').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') this.doLogin();
+    });
+    document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') this.doLogin();
+    });
+    document.getElementById('registerUsername').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') this.doRegister();
+    });
+    document.getElementById('registerPassword').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') this.doRegister();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      this.playSound('click');
+      this.doLogout();
+    });
+
+    document.getElementById('resumeBtn').addEventListener('click', () => {
+      this.playSound('click');
+      this.socket.emit('resumeGame');
+    });
+    document.getElementById('abandonBtn').addEventListener('click', () => {
+      this.playSound('click');
+      if (confirm('Удалить сохранённую игру? Это действие нельзя отменить.')) {
+        this.socket.emit('abandonGame');
+      }
+    });
+
+    // Вкладки: создать / войти в лобби / против бота
     document.getElementById('tabCreate').addEventListener('click', () => {
       this.playSound('click');
       this.showLobbyTab('create');
@@ -85,6 +141,10 @@ class CardGameClient {
     document.getElementById('tabJoin').addEventListener('click', () => {
       this.playSound('click');
       this.showLobbyTab('join');
+    });
+    document.getElementById('tabBot').addEventListener('click', () => {
+      this.playSound('click');
+      this.showLobbyTab('bot');
     });
 
     document.getElementById('createLobbyBtn').addEventListener('click', () => {
@@ -95,13 +155,11 @@ class CardGameClient {
       this.playSound('click');
       this.joinLobby();
     });
+    document.getElementById('createBotLobbyBtn').addEventListener('click', () => {
+      this.playSound('click');
+      this.createBotLobby();
+    });
 
-    document.getElementById('playerNameCreate').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.createLobby();
-    });
-    document.getElementById('playerNameJoin').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.joinLobby();
-    });
     document.getElementById('lobbyCodeInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') this.joinLobby();
     });
@@ -116,18 +174,107 @@ class CardGameClient {
     });
   }
 
+  showAuthTab(tab) {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+    loginForm.classList.toggle('hidden', tab !== 'login');
+    registerForm.classList.toggle('hidden', tab !== 'register');
+  }
+
+  tryRestoreSession() {
+    let token = null;
+    try { token = localStorage.getItem(SESSION_TOKEN_KEY); } catch (e) {}
+    if (token) {
+      this.socket.emit('authByToken', { token });
+    }
+  }
+
+  doLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!username || !password) {
+      alert('Введите логин и пароль');
+      return;
+    }
+    this.socket.emit('login', { username, password });
+  }
+
+  doRegister() {
+    const username = document.getElementById('registerUsername').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    if (!username || !password) {
+      alert('Введите логин и пароль');
+      return;
+    }
+    this.socket.emit('register', { username, password });
+  }
+
+  doLogout() {
+    let token = null;
+    try {
+      token = localStorage.getItem(SESSION_TOKEN_KEY);
+      localStorage.removeItem(SESSION_TOKEN_KEY);
+    } catch (e) {}
+    this.socket.emit('logout', { token });
+    this.authenticated = false;
+    this.playerId = null;
+    this.playerName = '';
+    this.activeGame = null;
+    // Возвращаемся к экрану авторизации
+    document.getElementById('authBlock').classList.remove('hidden');
+    document.getElementById('lobbyChoice').classList.add('hidden');
+    document.getElementById('lobbyWaiting').classList.add('hidden');
+    document.getElementById('gameScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('mainInstructions').classList.remove('hidden');
+  }
+
+  onAuthSuccess(data) {
+    const wasInGame = this.authenticated && this.gameState && !document.getElementById('gameScreen').classList.contains('hidden');
+
+    this.authenticated = true;
+    this.playerId = data.username;
+    this.playerName = data.username;
+    this.activeGame = data.activeGame || null;
+    try { localStorage.setItem(SESSION_TOKEN_KEY, data.token); } catch (e) {}
+
+    document.getElementById('currentUsername').textContent = data.username;
+    document.getElementById('authBlock').classList.add('hidden');
+    document.getElementById('lobbyChoice').classList.remove('hidden');
+
+    const resumePanel = document.getElementById('resumePanel');
+    if (this.activeGame && this.activeGame.code) {
+      document.getElementById('resumeCode').textContent = this.activeGame.code;
+      resumePanel.classList.remove('hidden');
+    } else {
+      resumePanel.classList.add('hidden');
+    }
+
+    // Если это был авто-реконнект во время активной игры — сразу обратно
+    if (wasInGame && this.activeGame && this.activeGame.code) {
+      this.socket.emit('resumeGame');
+    }
+  }
+
   showLobbyTab(tab) {
     const createBlock = document.getElementById('createLobbyBlock');
     const joinBlock = document.getElementById('joinLobbyBlock');
+    const botBlock = document.getElementById('botLobbyBlock');
     document.querySelectorAll('.lobby-tab').forEach(t => t.classList.remove('active'));
+    createBlock.classList.add('hidden');
+    joinBlock.classList.add('hidden');
+    botBlock.classList.add('hidden');
     if (tab === 'create') {
       createBlock.classList.remove('hidden');
-      joinBlock.classList.add('hidden');
       document.getElementById('tabCreate').classList.add('active');
-    } else {
+    } else if (tab === 'join') {
       joinBlock.classList.remove('hidden');
-      createBlock.classList.add('hidden');
       document.getElementById('tabJoin').classList.add('active');
+    } else {
+      botBlock.classList.remove('hidden');
+      document.getElementById('tabBot').classList.add('active');
     }
   }
 
@@ -135,14 +282,44 @@ class CardGameClient {
    * Настраивает обработчики событий Socket.io
    */
   setupSocketListeners() {
+    this.socket.on('authSuccess', (data) => {
+      console.log('Авторизация успешна:', data);
+      this.onAuthSuccess(data);
+    });
+
+    this.socket.on('authError', (data) => {
+      console.log('Ошибка авторизации:', data);
+      // Сессия могла истечь — чистим токен
+      try { localStorage.removeItem(SESSION_TOKEN_KEY); } catch (e) {}
+      if (this.authenticated) {
+        this.authenticated = false;
+        this.doLogout();
+      }
+      alert(data.message || 'Ошибка авторизации');
+    });
+
+    this.socket.on('gameAbandoned', (data) => {
+      console.log('Игра удалена:', data);
+      this.activeGame = null;
+      document.getElementById('resumePanel').classList.add('hidden');
+      this.showHint('Сохранение удалено');
+    });
+
     this.socket.on('lobbyCreated', (data) => {
       console.log('Лобби создано:', data);
       this.playerId = data.playerId;
       document.getElementById('lobbyChoice').classList.add('hidden');
       document.getElementById('mainInstructions').classList.add('hidden');
-      document.getElementById('lobbyCodeDisplay').textContent = data.code;
-      document.getElementById('lobbyWaiting').classList.remove('hidden');
-      this.showHint('Передайте код второго игрока. Ожидание...');
+      if (data.vsBot) {
+        // Одиночная игра: игра уже идёт, ждать никого не нужно
+        this.showHint('Игра против бота началась. Удачи!');
+      } else {
+        document.getElementById('lobbyCodeDisplay').textContent = data.code;
+        document.getElementById('lobbyWaiting').classList.remove('hidden');
+        document.querySelector('#lobbyWaiting .lobby-code-box').classList.remove('hidden');
+        document.querySelector('#lobbyWaiting .message p').textContent = 'Ожидание второго игрока...';
+        this.showHint('Передайте код второго игрока. Ожидание...');
+      }
     });
 
     this.socket.on('lobbyError', (data) => {
@@ -157,8 +334,13 @@ class CardGameClient {
       document.getElementById('mainInstructions').classList.add('hidden');
       document.getElementById('lobbyWaiting').classList.remove('hidden');
       document.querySelector('#lobbyWaiting .lobby-code-box').classList.add('hidden');
-      document.querySelector('#lobbyWaiting .message p').textContent = 'Ожидание начала игры...';
-      this.showHint('Вы в лобби. Игра начнётся, когда оба игрока на месте.');
+      document.querySelector('#lobbyWaiting .message p').textContent =
+        data.resumed ? 'Восстановление игры...' : 'Ожидание начала игры...';
+      this.showHint(
+        data.resumed
+          ? 'Возвращаемся к сохранённой игре...'
+          : 'Вы в лобби. Игра начнётся, когда оба игрока на месте.'
+      );
     });
 
     /**
@@ -177,10 +359,17 @@ class CardGameClient {
     this.socket.on('gameFinished', (data) => {
       console.log('Игра окончена! Победитель:', data.winner);
       this.showMessage(`🎉 Игра окончена! Победитель: ${data.winner}`);
-      
-      // Перезагружаем страницу через 5 секунд для новой игры
+      this.activeGame = null;
+
+      // Возвращаемся к лобби через 5 секунд (без logout)
       setTimeout(() => {
-        location.reload();
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('lobbyWaiting').classList.add('hidden');
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainInstructions').classList.remove('hidden');
+        document.getElementById('lobbyChoice').classList.remove('hidden');
+        document.getElementById('resumePanel').classList.add('hidden');
+        this.gameState = null;
       }, 5000);
     });
 
@@ -206,34 +395,39 @@ class CardGameClient {
    * Создать новое лобби
    */
   createLobby() {
-    const name = document.getElementById('playerNameCreate').value.trim();
-    if (!name) {
-      alert('Введите ваше имя');
-      document.getElementById('playerNameCreate').focus();
+    if (!this.authenticated) {
+      alert('Сначала войдите в аккаунт');
       return;
     }
-    this.playerName = name;
-    this.socket.emit('createLobby', name);
+    this.socket.emit('createLobby');
+  }
+
+  /**
+   * Создать одиночную игру против бота
+   */
+  createBotLobby() {
+    if (!this.authenticated) {
+      alert('Сначала войдите в аккаунт');
+      return;
+    }
+    this.socket.emit('createBotLobby');
   }
 
   /**
    * Войти в лобби по коду
    */
   joinLobby() {
-    const name = document.getElementById('playerNameJoin').value.trim();
-    const code = document.getElementById('lobbyCodeInput').value.trim().toUpperCase();
-    if (!name) {
-      alert('Введите ваше имя');
-      document.getElementById('playerNameJoin').focus();
+    if (!this.authenticated) {
+      alert('Сначала войдите в аккаунт');
       return;
     }
+    const code = document.getElementById('lobbyCodeInput').value.trim().toUpperCase();
     if (!code) {
       alert('Введите код лобби');
       document.getElementById('lobbyCodeInput').focus();
       return;
     }
-    this.playerName = name;
-    this.socket.emit('joinLobby', { playerName: name, lobbyCode: code });
+    this.socket.emit('joinLobby', { lobbyCode: code });
   }
 
   /**

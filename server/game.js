@@ -3,7 +3,7 @@
  * Создает колоду, управляет игроками, проверяет ходы
  */
 class CardGame {
-  constructor() {
+  constructor(opts) {
     this.players = [];      // Массив игроков
     this.deck = [];         // Колода карт
     this.table = [];        // Карты на столе
@@ -12,8 +12,56 @@ class CardGame {
     this.defender = null;   // Игрок который защищается
     this.trumpSuit = null;  // Козырная масть
     this.gameState = 'waiting'; // Состояние игры: waiting, playing, finished
-    
+
+    if (opts && opts.skipInit) return; // используется в fromJSON
+
     this.initDeck(); // Создаем и перемешиваем колоду
+  }
+
+  /**
+   * Сериализация — всё нужное чтобы потом восстановить игру 1-в-1.
+   * Ссылки на игроков (currentPlayer/attacker/defender) кодируем по id,
+   * чтобы при десериализации восстановить указатели в this.players.
+   */
+  toJSON() {
+    return {
+      players: this.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        cards: p.cards,
+        isAttacker: !!p.isAttacker,
+        isDefender: !!p.isDefender,
+      })),
+      deck: this.deck,
+      table: this.table,
+      trumpSuit: this.trumpSuit,
+      gameState: this.gameState,
+      currentPlayerId: this.currentPlayer ? this.currentPlayer.id : null,
+      attackerId: this.attacker ? this.attacker.id : null,
+      defenderId: this.defender ? this.defender.id : null,
+    };
+  }
+
+  /**
+   * Восстанавливает CardGame из сохранённого состояния.
+   */
+  static fromJSON(data) {
+    const g = new CardGame({ skipInit: true });
+    g.players = (data.players || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      cards: Array.isArray(p.cards) ? p.cards.slice() : [],
+      isAttacker: !!p.isAttacker,
+      isDefender: !!p.isDefender,
+    }));
+    g.deck = Array.isArray(data.deck) ? data.deck.slice() : [];
+    g.table = Array.isArray(data.table) ? data.table.slice() : [];
+    g.trumpSuit = data.trumpSuit || null;
+    g.gameState = data.gameState || 'waiting';
+    g.currentPlayer = data.currentPlayerId ? g.players.find(p => p.id === data.currentPlayerId) : null;
+    g.attacker = data.attackerId ? g.players.find(p => p.id === data.attackerId) : null;
+    g.defender = data.defenderId ? g.players.find(p => p.id === data.defenderId) : null;
+    return g;
   }
 
   /**

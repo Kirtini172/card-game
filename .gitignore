@@ -1,0 +1,4 @@
+server/data/db.json
+server/data/*.tmp
+*.log
+.DS_Store

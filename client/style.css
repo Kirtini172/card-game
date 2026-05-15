@@ -146,6 +146,7 @@ body {
     margin-bottom: 2rem;
 }
 
+#playerNameBot,
 #playerName,
 #playerNameCreate,
 #playerNameJoin,
@@ -840,6 +841,7 @@ body {
     color: #fff;
 }
 
+#playerNameBot,
 #playerNameCreate,
 #playerNameJoin,
 #lobbyCodeInput {
@@ -909,4 +911,94 @@ body {
 .hint-message {
     background: rgba(233, 69, 96, 0.95);
     color: #fff;
+}
+
+/* ===== Авторизация и панель аккаунта ===== */
+
+#loginUsername,
+#loginPassword,
+#registerUsername,
+#registerPassword {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    background: #0f1a33;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+#loginUsername:focus,
+#loginPassword:focus,
+#registerUsername:focus,
+#registerPassword:focus,
+#lobbyCodeInput:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.account-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.username-chip {
+    color: #ffeb3b;
+    font-weight: bold;
+}
+
+.link-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 0.95rem;
+    text-decoration: underline;
+    padding: 0.25rem 0.5rem;
+}
+
+.link-btn:hover {
+    color: var(--accent-hover);
+}
+
+.resume-panel {
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    background: rgba(76, 175, 80, 0.12);
+    border: 1px solid rgba(76, 175, 80, 0.45);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.resume-panel p {
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.lobby-code-inline {
+    font-family: monospace;
+    font-weight: bold;
+    color: #ffeb3b;
+    letter-spacing: 0.15em;
+}
+
+.resume-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.resume-actions .btn-primary,
+.resume-actions .btn-secondary {
+    padding: 0.75rem 1.25rem;
 }
